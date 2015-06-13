@@ -4,7 +4,7 @@
 # 
 # Created Time: 2015年05月11日 星期一 21时46分03秒
 # 
-import cClient, logging
+import cluster, logging
 from call import Call
 
 LISTEN_DIRECTORY = 'listen/'
@@ -41,20 +41,20 @@ class Binding(object):
         self.key = self.bind_event + '/' + self.listen_event
 
     def bind(self):
-        cClient.client.kv.put(self.key, self.listen_event)
+        cluster.CONSUL_CLIENT.kv.put(self.key, self.listen_event)
         logging.info('Binding service: ' + self.bind_event + ':' + self.listen_event)
 
     def unbind(self):
-        cClient.client.kv.delete(self.key)
+        cluster.CONSUL_CLIENT.kv.delete(self.key)
         logging.info('Unbinding service: ' + self.bind_event + ':' + self.listen_event)
 
     @staticmethod
     def query(bind_event):
         bind_event = LISTEN_DIRECTORY + bind_event
-        keys = cClient.client.kv.get(bind_event, keys=True)[1]
-        logging.error(keys)
+        keys = cluster.CONSUL_CLIENT.kv.get(bind_event, keys=True)[1]
         if keys is None:
             return None
+        keys = [key.lstrip(bind_event) for key in keys ]
         keys = [key.split('/')[-1] for key in keys]
         logging.info('Query binding: ' + bind_event + '\n' + '\n'.join(keys))
         return keys
@@ -63,7 +63,7 @@ class Binding(object):
     def register(bind_event):
         if Binding.query(bind_event) is None:
             bind_event = LISTEN_DIRECTORY + bind_event
-            cClient.client.kv.put(bind_event, None)
+            cluster.CONSUL_CLIENT.kv.put(bind_event, None)
         logging.info('Register event: ' + bind_event)
 
     @staticmethod
@@ -79,6 +79,8 @@ class Binding(object):
             return
         logging.info('Notifying events by ' + bind_event + ':\n' + '\n'.join(listen_events))
         def get_event(e, arguments=arguments):
+            if not e:
+                return
             event = {}
             e = e.split('.')
             event['service_name'] = e[0]

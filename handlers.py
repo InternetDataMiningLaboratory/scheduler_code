@@ -30,6 +30,9 @@ class ServiceHandler(BaseHandler):
     ''' 
     def post(self, service_name, service_action):
         arguments = self.request.arguments
+        for key, value in arguments.iteritems():
+            if isinstance(value, list):
+                arguments[key] = value.pop()
         self.write(str(Call(service_name, service_action, arguments)))
 '''
 class PatchHandler(BaseHandler):

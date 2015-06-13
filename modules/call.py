@@ -25,6 +25,7 @@ def Call(service_name, service_action, arguments=None):
         logging.exception("call modules import error")
         return 'Error: '+str(e)
     call_service = getattr(call_service, service_name)
+    print call_service
     try:
         call_action = getattr(call_service, service_action)
     except AttributeError, e:
