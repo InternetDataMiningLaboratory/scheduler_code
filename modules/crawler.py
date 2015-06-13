@@ -51,6 +51,8 @@ def crawl(arguments):
             environment={
                 "DATABASE_USER" : environment.get_user(),
                 "DATABASE_PASSWD" : environment.get_password(),
+                "MAIL_USER" : environment.get_mail_user(),
+                "MAIL_PASSWD" : environment.get_mail_password(), 
             },
         )
     except Exception, e:

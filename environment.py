@@ -13,3 +13,9 @@ def get_user():
 
 def get_password():
     return os.getenv('DATABASE_PASSWD')
+
+def get_mail_user():
+    return os.getenv('MAIL_USER')
+
+def get_mail_password():
+    return os.getenv('MAIL_PASSWD')
