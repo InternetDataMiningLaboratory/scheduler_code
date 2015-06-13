@@ -21,7 +21,6 @@ def patch(arguments):
         参数:
             patch_id: 更新数据批次id
     '''
-    return 'test'
     patch_id = arguments.get('patch_id', None)
 
     #检查参数

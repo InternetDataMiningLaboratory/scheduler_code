@@ -71,7 +71,7 @@ def crawl(arguments):
 
     #容器执行完成后的回调函数
     def callback(response, container=container, crawler_id=crawler_id, patch_id=patch_id):
-        #cluster.SWARM_CLIENT.remove_container(container)
+        cluster.SWARM_CLIENT.remove_container(container)
         Crawler.status(crawler_id, 'finished')
         Binding.notify(Event.crawl_finished, arguments={'patch_id':patch_id})
 
