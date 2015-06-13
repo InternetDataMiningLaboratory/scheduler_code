@@ -48,7 +48,10 @@ def crawl(arguments):
     try:
         container = cluster.SWARM_CLIENT.create_container(
             image=CRAWLER_IMAGE,
-            command=command,
+            environment={
+                "DATABASE_USER" : environment.get_user(),
+                "DATABASE_PASSWD" : environment.get_password(),
+            },
         )
     except Exception, e:
         Crawler.status(crawler_id, 'error', str(e))
@@ -63,7 +66,7 @@ def crawl(arguments):
 
     #容器执行完成后的回调函数
     def callback(response, container=container, crawler_id=crawler_id, patch_id=patch_id):
-        dClient.client.remove_container(container)
+        cluster.SWARM_CLIENT.remove_container(container)
         Crawler.status(crawler_id, 'finished')
         Binding.notify(Event.crawl_finished, arguments={'patch_id':patch_id})
 
