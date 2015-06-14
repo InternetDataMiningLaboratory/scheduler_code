@@ -11,7 +11,7 @@ import environment
 
 COMPANY_SERVICE =\
     torndb.Connection(
-        'mysql.service.consul',
+        'mysql',
         'company_service',
         user=environment.get_user(),
         password=environment.get_password(),
@@ -43,6 +43,7 @@ class Crawler(object):
         '''
             更新爬虫信息
         '''
+        value_sql = ""
 
         #生成更新语句
         for key, value in value_dict.iteritems():

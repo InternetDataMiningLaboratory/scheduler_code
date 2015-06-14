@@ -13,3 +13,11 @@ def get_user():
 
 def get_password():
     return os.getenv('DATABASE_PASSWD')
+
+def get_mail_user():
+    print os.getenv('MAIL_USER')
+    return os.getenv('MAIL_USER')
+
+def get_mail_password():
+    print os.getenv('MAIL_PASSWD')
+    return os.getenv('MAIL_PASSWD')

@@ -28,7 +28,7 @@ class Binding(object):
     
     def __init__(self, bind_event, listen_event):
         self.bind_event =\
-            '{listen_directory}/{bind_event}'.format(
+            '{listen_directory}{bind_event}'.format(
                 listen_directory = LISTEN_DIRECTORY,
                 bind_event=bind_event,
             )
@@ -50,14 +50,18 @@ class Binding(object):
 
     @staticmethod
     def query(bind_event):
-        bind_event = LISTEN_DIRECTORY + bind_event
-        keys = cluster.CONSUL_CLIENT.kv.get(bind_event, keys=True)[1]
+        bind_dir = LISTEN_DIRECTORY + bind_event
+        keys = cluster.CONSUL_CLIENT.kv.get(bind_dir, keys=True)[1]
         if keys is None:
             return None
-        keys = [key.lstrip(bind_event) for key in keys ]
-        keys = [key.split('/')[-1] for key in keys]
-        logging.info('Query binding: ' + bind_event + '\n' + '\n'.join(keys))
-        return keys
+        filtered_keys = []
+        for key in keys:
+            key = key.split('/')[-1]
+            if key == bind_event:
+                continue
+            filtered_keys.append(key)
+        logging.info('Query binding: ' + bind_event + '\n' + '\n'.join(filtered_keys))
+        return filtered_keys
 
     @staticmethod
     def register(bind_event):

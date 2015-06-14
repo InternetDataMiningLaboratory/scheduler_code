@@ -47,7 +47,7 @@ def patch(arguments):
     
     #容器结束后回调命令
     def callback(response, container=container, patch_id=patch_id):
-        cluster.CONSUL_CLIENT.remove_container(container)
+        cluster.SWARM_CLIENT.remove_container(container)
         Binding.notify(Event.patch_finished, arguments={'patch_id':patch_id})
 
     try:

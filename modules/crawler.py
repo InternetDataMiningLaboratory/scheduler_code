@@ -8,6 +8,7 @@ import cluster
 from database import Crawler
 from bind import Binding, Event
 import logging
+import environment
 
 CRAWLER_IMAGE = 'companyservice/crawler'
 
@@ -49,8 +50,18 @@ def crawl(arguments):
         container = cluster.SWARM_CLIENT.create_container(
             image=CRAWLER_IMAGE,
             command=command,
+            environment={
+                "DATABASE_USER" : environment.get_user(),
+                "DATABASE_PASSWD" : environment.get_password(),
+                "MAIL_USER" : environment.get_mail_user(),
+                "MAIL_PASSWD" : environment.get_mail_password(), 
+            },
+            host_config=cluster.create_host_config(
+                dns=["172.17.42.1", "8.8.8.8"],
+            ),
         )
     except Exception, e:
+        raise e
         Crawler.status(crawler_id, 'error', str(e))
         return 'Error:'+e
 
@@ -63,7 +74,7 @@ def crawl(arguments):
 
     #容器执行完成后的回调函数
     def callback(response, container=container, crawler_id=crawler_id, patch_id=patch_id):
-        dClient.client.remove_container(container)
+        cluster.SWARM_CLIENT.remove_container(container)
         Crawler.status(crawler_id, 'finished')
         Binding.notify(Event.crawl_finished, arguments={'patch_id':patch_id})
 
