@@ -11,7 +11,7 @@ import environment
 
 COMPANY_SERVICE =\
     torndb.Connection(
-        '172.16.153.45',
+        'mysql',
         'company_service',
         user=environment.get_user(),
         password=environment.get_password(),
