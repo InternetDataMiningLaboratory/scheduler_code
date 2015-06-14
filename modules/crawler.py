@@ -56,6 +56,9 @@ def crawl(arguments):
                 "MAIL_USER" : environment.get_mail_user(),
                 "MAIL_PASSWD" : environment.get_mail_password(), 
             },
+            host_config=cluster.create_host_config(
+                dns=["172.17.42.1", "8.8.8.8"],
+            ),
         )
     except Exception, e:
         raise e
