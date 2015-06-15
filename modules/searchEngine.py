@@ -8,6 +8,7 @@ import logging
 import cluster
 from bind import Binding, Event
 import tornado.gen
+import environment
 
 SEARCH_ENGINE_IMAGE = 'companyservice/searchengine'
 
@@ -79,14 +80,19 @@ def search(arguments):
         container = cluster.SWARM_CLIENT.create_container(
             image=SEARCH_ENGINE_IMAGE,
             command=command,
-            environment=["affinity:container==luceneIndex"],
+            environment={
+                "DATABASE_USER" : environment.get_user(),
+                "DATABASE_PASSWD" : environment.get_password(),
+            },
+            host_config=cluster.create_host_config(
+                volumes_from='luceneIndex',
+            ),
         )
     except Exception, e:
         return 'Error:'+str(e)
 
     cluster.SWARM_CLIENT.start(
         container,
-        volumes_from='luceneIndex',
     )
     
     @cluster.async
