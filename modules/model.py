@@ -63,7 +63,7 @@ def calculate(arguments):
     @tornado.gen.engine
     def gen_wait(container=container):
         yield tornado.gen.Task(cluster.async_action, container, 'wait')
-        #cluster.SWARM_CLIENT.remove_container(container)
+        cluster.SWARM_CLIENT.remove_container(container)
         Binding.notify(Event.calculate_finished, 'okay')
 
     try:
