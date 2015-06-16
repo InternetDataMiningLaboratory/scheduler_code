@@ -99,3 +99,20 @@ class Crawler(object):
         container_id = container['Id']
         value_dict = {'crawler_jobid': container_id}
         Crawler._update(crawler_id, value_dict)
+
+class Model(object):
+    '''
+        模型持久化对象
+    '''
+    @staticmethod
+    def select(model_id):
+        '''
+            读取模型 
+        '''
+        sql = (
+            'SELECT * '
+            'FROM model '
+            'WHERE model_id = {model_id}'
+        ).format(model_id=model_id)
+        
+        return COMPANY_SERVICE.get(sql)

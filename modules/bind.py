@@ -14,10 +14,12 @@ class Event(object):
         'crawl_finished',
         'patch_finished',
         'search_finished',
+        'calculate_finished',
     ]
     crawl_finished = 'crawler.crawl_finished'
     patch_finished = 'searchEngine.patch_finished'
     search_finished = 'searchEngine.search_finished'
+    calculate_finished = 'model.calculate_finished'
 
 class Binding(object):
     __slots__ = [
