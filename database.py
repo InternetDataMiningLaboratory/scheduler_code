@@ -9,17 +9,49 @@ import logging
 import json
 import environment
 
-COMPANY_SERVICE =\
-    torndb.Connection(
-        'mysql',
-        'company_service',
-        user=environment.get_user(),
-        password=environment.get_password(),
-    )
 
-def release():
-    COMPANY_SERVICE.close()
+class ConnectionMissingDatabaseException(Exception):
+    '''
+        异常类，数据库连接未提供数据库名时抛出
+        默认处理是中断当前连接操作
+    '''
+    def __init__(self):
+        logging.error(u'异常：数据库连接缺少数据库名！'.encode('utf8'))
+    
+    def __str__(self):
+        return u'数据库连接未指定数据库名！'.encode('utf8')
 
+class Connection(object):
+    '''
+        数据库连接类
+        例子：
+            with Connection('mysql') as connection:
+                #做一些数据库操作
+    '''
+    def __init__(self, database_name=None):
+        if database_name is None:
+            raise ConnectionMissingDatabaseException()
+        self._database_name = database_name
+    
+    def __enter__(self):
+        self._connection = \
+            torndb.Connection(
+                'mysql',
+                self._database_name,
+                user=environment.get_user(),
+                password=environment.get_password(),
+                connect_timeout=10,
+            )
+        return self._connection
+
+    def __exit__(self, reason, value, traceback):
+        if self._connection:
+            self._connection.close()
+        if reason is not None:
+            logging.error(value)
+            raise value
+        return False
+        
 class Crawler(object):
     '''
         爬虫的持久化对象
