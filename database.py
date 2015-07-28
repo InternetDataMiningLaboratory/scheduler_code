@@ -4,10 +4,12 @@
 # 
 # Created Time: 2015年03月06日 星期五 16时36分19秒
 # 
-import torndb
+import MySQLdb as DB
+import MySQLdb.cursors as Cursor
 import logging
 import json
 import environment
+import traceback
 
 
 class ConnectionMissingDatabaseException(Exception):
@@ -29,46 +31,107 @@ class Connection(object):
                 #做一些数据库操作
     '''
     def __init__(self, database_name=None):
+        '''
+            初始化
+            如果参数database_name未给出，则抛出异常
+        '''
         if database_name is None:
             raise ConnectionMissingDatabaseException()
         self._database_name = database_name
     
     def __enter__(self):
+        '''
+            建立数据库连接
+        '''
         self._connection = \
-            torndb.Connection(
-                'mysql',
-                self._database_name,
+            DB.connect(
+                host='mysql',
+                db=self._database_name,
                 user=environment.get_user(),
-                password=environment.get_password(),
-                connect_timeout=10,
+                passwd=environment.get_password(),
+                charset='utf8',
             )
-        return self._connection
+        return self
 
-    def __exit__(self, reason, value, traceback):
-        if self._connection:
+    def __exit__(self, reason, value, tb):
+        '''
+            关闭数据库连接，如果有异常则捕获
+        '''
+        if self._connection is not None:
             self._connection.close()
         if reason is not None:
-            logging.error(value)
-            raise value
-        return False
-        
-class Crawler(object):
+            logging.error(str(value))
+            logging.info(traceback.format_tb(tb))
+        return True
+    
+    def _execute(self, cursor, sql, parameters):
+        '''
+            数据库执行语句，如果有异常则捕获并打印出错信息
+        '''
+        try:
+            result = cursor.execute(sql, parameters)
+        except Exception, e:
+            logging.error(str(e))
+            result = None
+        return result
+
+    def query(self, sql, *args):
+        cursor = Cursor.BaseCursor()
+        result = self._execute(cursor, sql, args)
+        try:
+            keys = [key[0] for key in cursor.description]
+        except Exception, e:
+            logging.error(str(e))
+            result = None
+        finally:
+            cursor.close()
+        if result is None:
+            return {}
+        return dict(zip(keys, result))
+
+class BasicObject(object):
     '''
-        爬虫的持久化对象
+        数据库持久化对象基类
+    '''
+    _db = None
+    _table = None
+
+    def __init__(self, **kwargs):
+        '''
+            初始化方法
+            读取一系列参数作为字典，将key作为属性，value作为属性的值创建持久化对象
+        '''
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+
+class Crawler(BasicObject):
+    '''
+        后台爬虫持久化对象类
     '''
 
-    @staticmethod        
-    def select(crawler_id):
+    @classmethod        
+    def select(cls, crawler_id=None):
         '''
-            获取爬虫信息
+            根据crawler_id获取爬虫信息
         '''
+        #如果没有提供crawler_id
+        if crawler_id is None:
+            return None
         sql =\
             (
                 'SELECT * '
                 'FROM contribute_crawler.crawler '
-                'WHERE crawler_id = {crawler_id}'
-            ).format(crawler_id=crawler_id)
-        return COMPANY_SERVICE.get(sql)
+                'WHERE crawler_id = %s'
+            )
+        with Connection('contribute_crawler') as connection:
+            cursor = connection.cursor()
+            cursor.execute(sql, crawler_id)
+            result = cursor.fetchone()
+            if result is None:
+                return result 
+            return cls()
+            
+            
     
     @staticmethod
     def _update(index, value_dict, search_column='crawler_id'):
